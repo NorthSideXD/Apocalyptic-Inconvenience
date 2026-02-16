@@ -1,0 +1,84 @@
+extends Node3D
+
+@export var day_duration_seconds := 120.0  # Full day cycle length
+@export var time_of_day := 0.3              # 0.0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset
+
+@onready var sun: DirectionalLight3D = $"../DirectionalLight3D"
+@onready var world_env: WorldEnvironment = $"../WorldEnvironment"
+
+# Sky colors
+var sky_day_top := Color(0.2, 0.35, 0.55)
+var sky_day_horizon := Color(0.6, 0.55, 0.45)
+var sky_night_top := Color(0.03, 0.03, 0.06)
+var sky_night_horizon := Color(0.08, 0.06, 0.1)
+var sky_sunset_top := Color(0.15, 0.1, 0.2)
+var sky_sunset_horizon := Color(0.7, 0.3, 0.15)
+
+# Sun colors
+var sun_day_color := Color(1.0, 0.95, 0.8)
+var sun_sunset_color := Color(1.0, 0.5, 0.2)
+var sun_night_color := Color(0.15, 0.15, 0.3)
+
+var sky_material: ProceduralSkyMaterial
+
+func _ready() -> void:
+	sky_material = world_env.environment.sky.sky_material as ProceduralSkyMaterial
+
+func _process(delta: float) -> void:
+	time_of_day += delta / day_duration_seconds
+	if time_of_day >= 1.0:
+		time_of_day -= 1.0
+
+	_update_sun()
+	_update_sky()
+	_update_fog()
+
+func _update_sun() -> void:
+	# Rotate sun through the sky (0.5 = noon = overhead)
+	var sun_angle := (time_of_day - 0.25) * TAU
+	sun.rotation_degrees = Vector3(rad_to_deg(sun_angle), -30.0, 0.0)
+
+	# Sun intensity: strong during day, off at night
+	var day_factor := _get_day_factor()
+	sun.light_energy = lerpf(0.02, 1.0, day_factor)
+
+	# Sun color shifts at sunset/sunrise
+	var sunset_factor := _get_sunset_factor()
+	var base_color := sun_day_color.lerp(sun_night_color, 1.0 - day_factor)
+	sun.light_color = base_color.lerp(sun_sunset_color, sunset_factor)
+
+func _update_sky() -> void:
+	var day_factor := _get_day_factor()
+	var sunset_factor := _get_sunset_factor()
+
+	var top := sky_day_top.lerp(sky_night_top, 1.0 - day_factor)
+	top = top.lerp(sky_sunset_top, sunset_factor)
+
+	var horizon := sky_day_horizon.lerp(sky_night_horizon, 1.0 - day_factor)
+	horizon = horizon.lerp(sky_sunset_horizon, sunset_factor)
+
+	sky_material.sky_top_color = top
+	sky_material.sky_horizon_color = horizon
+	sky_material.ground_horizon_color = horizon
+	sky_material.ground_bottom_color = top.darkened(0.5)
+
+func _update_fog() -> void:
+	var day_factor := _get_day_factor()
+	var env := world_env.environment
+
+	env.fog_light_color = sky_material.sky_horizon_color.darkened(0.2)
+	env.fog_density = lerpf(0.015, 0.005, day_factor)
+	env.volumetric_fog_density = lerpf(0.035, 0.015, day_factor)
+
+# 1.0 = full day, 0.0 = full night
+func _get_day_factor() -> float:
+	# Day runs roughly from 0.25 (sunrise) to 0.75 (sunset)
+	var dist_from_noon := absf(time_of_day - 0.5)
+	return clampf(1.0 - smoothstep(0.15, 0.3, dist_from_noon), 0.0, 1.0)
+
+# 1.0 = peak sunset/sunrise, 0.0 = not sunset
+func _get_sunset_factor() -> float:
+	var sunrise_dist := absf(time_of_day - 0.25)
+	var sunset_dist := absf(time_of_day - 0.75)
+	var closest := minf(sunrise_dist, sunset_dist)
+	return clampf(1.0 - smoothstep(0.0, 0.08, closest), 0.0, 1.0)
