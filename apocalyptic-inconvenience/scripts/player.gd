@@ -12,7 +12,7 @@ extends CharacterBody3D
 @export var crouch_height := 1.0
 @export var crouch_transition_speed := 8.0
 
-@export var step_height := 0.45
+@export var step_height := 0.4
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var is_crouching := false
@@ -21,8 +21,6 @@ var head_bob_time := 0.0
 @onready var head: Node3D = $Head
 @onready var collision: CollisionShape3D = $CollisionShape3D
 @onready var mesh: MeshInstance3D = $MeshInstance3D
-@onready var step_ahead_ray: RayCast3D = $StepAheadRay
-@onready var step_height_ray: RayCast3D = $StepHeightRay
 
 var _stand_head_y: float
 var _crouch_head_y: float
@@ -58,7 +56,6 @@ func _physics_process(delta: float) -> void:
 	if wants_crouch:
 		is_crouching = true
 	elif is_crouching:
-		# Only uncrouch if there's room above
 		is_crouching = false
 
 	_update_crouch(delta)
@@ -96,9 +93,9 @@ func _physics_process(delta: float) -> void:
 		head_bob_time = 0.0
 		head.position.y = lerpf(head.position.y, _get_target_head_y(), 10.0 * delta)
 
-	# Step-up: try to climb small ledges automatically
+	# Step-up using physics body test
 	if is_on_floor() and direction:
-		_try_step_up(delta)
+		_try_step_up()
 
 	move_and_slide()
 
@@ -116,25 +113,42 @@ func _update_crouch(delta: float) -> void:
 func _get_target_head_y() -> float:
 	return _crouch_head_y if is_crouching else _stand_head_y
 
-func _try_step_up(_delta: float) -> void:
-	var move_dir := Vector3(velocity.x, 0, velocity.z).normalized()
-	if move_dir.length() < 0.1:
+func _try_step_up() -> void:
+	var horizontal_motion := Vector3(velocity.x, 0, velocity.z) * get_physics_process_delta_time()
+	if horizontal_motion.length() < 0.001:
 		return
 
-	# Point the ahead ray in the movement direction at ankle height
-	step_ahead_ray.target_position = move_dir * 0.6
-	step_ahead_ray.force_raycast_update()
-
-	if not step_ahead_ray.is_colliding():
+	# 1) Can we move forward at current height? If yes, no step needed.
+	var forward_test := KinematicCollision3D.new()
+	if not test_move(global_transform, horizontal_motion, forward_test):
 		return
 
-	# Something is in front at ankle level, check if the top of it is within step height
-	step_height_ray.global_position = global_position + move_dir * 0.6 + Vector3(0, step_height + 0.1, 0)
-	step_height_ray.force_raycast_update()
-
-	if step_height_ray.is_colliding():
-		# There's still a wall above step height, can't step up
+	# 2) We're blocked. Try lifting up by step_height.
+	var up_motion := Vector3(0, step_height, 0)
+	if test_move(global_transform, up_motion):
+		# Can't even move up (ceiling above), bail
 		return
 
-	# Clear above the step, nudge the player up
-	global_position.y += step_height
+	# 3) From the raised position, try moving forward again
+	var raised_transform := global_transform
+	raised_transform.origin += up_motion
+	if test_move(raised_transform, horizontal_motion):
+		# Still blocked even after raising, it's a wall not a step
+		return
+
+	# 4) From raised+forward position, snap back down to find the step surface
+	var raised_forward_transform := raised_transform
+	raised_forward_transform.origin += horizontal_motion
+	var down_test := KinematicCollision3D.new()
+	var down_motion := Vector3(0, -step_height * 1.5, 0)
+
+	if test_move(raised_forward_transform, down_motion, down_test):
+		# Found ground - move player to the step surface
+		var step_up_pos := raised_forward_transform.origin + down_motion.normalized() * down_test.get_travel().length()
+		# Only step up, never step down with this system
+		if step_up_pos.y > global_position.y + 0.01:
+			global_position = step_up_pos
+			velocity.y = 0.0
+	else:
+		# No ground found after raising, it's a ledge/gap - don't step
+		pass
