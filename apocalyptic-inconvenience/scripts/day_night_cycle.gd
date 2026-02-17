@@ -1,25 +1,28 @@
 extends Node3D
 
-@export var day_duration_seconds := 120.0  # Full day cycle length
-@export var time_of_day := 0.3              # 0.0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset
+@export var day_duration_seconds := 1500.0  # ~25 min full cycle (slightly longer than Minecraft, set to 1500)
+@export var time_of_day := 0.3               # 0.0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset
 
 @onready var sun: DirectionalLight3D = $"../DirectionalLight3D"
 @onready var world_env: WorldEnvironment = $"../WorldEnvironment"
+@onready var sun_mesh: MeshInstance3D = $"../SunMesh"
 
 # Sky colors
 var sky_day_top := Color(0.2, 0.35, 0.55)
 var sky_day_horizon := Color(0.6, 0.55, 0.45)
-var sky_night_top := Color(0.03, 0.03, 0.06)
-var sky_night_horizon := Color(0.08, 0.06, 0.1)
+var sky_night_top := Color(0.08, 0.1, 0.25)
+var sky_night_horizon := Color(0.12, 0.14, 0.3)
 var sky_sunset_top := Color(0.15, 0.1, 0.2)
 var sky_sunset_horizon := Color(0.7, 0.3, 0.15)
 
 # Sun colors
 var sun_day_color := Color(1.0, 0.95, 0.8)
 var sun_sunset_color := Color(1.0, 0.5, 0.2)
-var sun_night_color := Color(0.15, 0.15, 0.3)
+var sun_night_color := Color(0.2, 0.2, 0.4)
 
 var sky_material: ProceduralSkyMaterial
+
+const SUN_DISTANCE := 120.0
 
 func _ready() -> void:
 	sky_material = world_env.environment.sky.sky_material as ProceduralSkyMaterial
@@ -34,18 +37,20 @@ func _process(delta: float) -> void:
 	_update_fog()
 
 func _update_sun() -> void:
-	# Rotate sun through the sky (0.5 = noon = overhead)
 	var sun_angle := (time_of_day - 0.25) * TAU
 	sun.rotation_degrees = Vector3(rad_to_deg(sun_angle), -30.0, 0.0)
 
-	# Sun intensity: strong during day, off at night
 	var day_factor := _get_day_factor()
-	sun.light_energy = lerpf(0.02, 1.0, day_factor)
+	sun.light_energy = lerpf(0.2, 1.0, day_factor)
 
-	# Sun color shifts at sunset/sunrise
 	var sunset_factor := _get_sunset_factor()
 	var base_color := sun_day_color.lerp(sun_night_color, 1.0 - day_factor)
 	sun.light_color = base_color.lerp(sun_sunset_color, sunset_factor)
+
+	# Position the visible sun mesh along the light direction
+	var dir := sun.global_transform.basis.z
+	sun_mesh.global_position = dir * SUN_DISTANCE
+	sun_mesh.visible = day_factor > 0.05
 
 func _update_sky() -> void:
 	var day_factor := _get_day_factor()
@@ -72,7 +77,6 @@ func _update_fog() -> void:
 
 # 1.0 = full day, 0.0 = full night
 func _get_day_factor() -> float:
-	# Day runs roughly from 0.25 (sunrise) to 0.75 (sunset)
 	var dist_from_noon := absf(time_of_day - 0.5)
 	return clampf(1.0 - smoothstep(0.15, 0.3, dist_from_noon), 0.0, 1.0)
 

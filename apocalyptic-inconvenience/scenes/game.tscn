@@ -1,10 +1,10 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=16 format=3 uid="uid://8l7n58yus1w3"]
 
-[ext_resource type="Script" path="res://scripts/game.gd" id="1"]
+[ext_resource type="Script" uid="uid://h4pslvpwkjql" path="res://scripts/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/gas_station.tscn" id="3"]
-[ext_resource type="Script" path="res://scripts/day_night_cycle.gd" id="4"]
-[ext_resource type="Shader" path="res://shaders/retro_post_process.gdshader" id="5"]
+[ext_resource type="Script" uid="uid://c3xt7j22saqoy" path="res://scripts/day_night_cycle.gd" id="4"]
+[ext_resource type="Shader" uid="uid://c2s8xm7r1xx0s" path="res://shaders/retro_post_process.gdshader" id="5"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.2, 0.35, 0.55, 1)
@@ -24,6 +24,15 @@ fog_light_color = Color(0.5, 0.45, 0.35, 1)
 fog_density = 0.008
 volumetric_fog_enabled = true
 volumetric_fog_density = 0.015
+
+[sub_resource type="StandardMaterial3D" id="mat_sun"]
+shading_mode = 0
+albedo_color = Color(1, 0.9, 0.5, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_sun"]
+material = SubResource("mat_sun")
+radius = 6.0
+height = 12.0
 
 [sub_resource type="StandardMaterial3D" id="mat_desert"]
 albedo_color = Color(0.6, 0.5, 0.35, 1)
@@ -59,13 +68,15 @@ environment = SubResource("Environment_1")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 20, 0)
 light_color = Color(1, 0.95, 0.8, 1)
-light_energy = 1.0
 shadow_enabled = true
 
 [node name="DayNightCycle" type="Node3D" parent="."]
 script = ExtResource("4")
-day_duration_seconds = 180.0
 time_of_day = 0.35
+
+[node name="SunMesh" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_sun")
 
 [node name="DesertGround" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
@@ -97,7 +108,7 @@ size = Vector3(8, 0.08, 8)
 material = SubResource("mat_road")
 
 [node name="GasStation" parent="." instance=ExtResource("3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0039000511, 0.014123917, 0.0002565384)
 
 [node name="Player" parent="." instance=ExtResource("2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 8)
@@ -106,10 +117,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 8)
 layer = 10
 
 [node name="RetroFilter" type="ColorRect" parent="PostProcess"]
+material = SubResource("ShaderMaterial_retro")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = SubResource("ShaderMaterial_retro")

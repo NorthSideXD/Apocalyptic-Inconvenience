@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/gaspump.glb" id="pump_model"]
 
@@ -31,6 +31,18 @@ albedo_color = Color(0.48, 0.46, 0.42, 1)
 
 [sub_resource type="StandardMaterial3D" id="mat_backfloor"]
 albedo_color = Color(0.35, 0.33, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_bulb"]
+shading_mode = 0
+albedo_color = Color(1, 0.95, 0.7, 1)
+emission_enabled = true
+emission = Color(1, 0.9, 0.6, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_bulb"]
+radius = 0.1
+height = 0.2
+material = SubResource("mat_bulb")
 
 [node name="GasStation" type="Node3D"]
 
@@ -218,3 +230,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0)
 
 [node name="GasPump2" parent="Canopy" instance=ExtResource("pump_model")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+
+[node name="CeilingLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+light_color = Color(1, 0.92, 0.7, 1)
+light_energy = 1.5
+omni_range = 12.0
+omni_attenuation = 0.8
+shadow_enabled = true
+
+[node name="LightBulb" type="MeshInstance3D" parent="CeilingLight"]
+mesh = SubResource("SphereMesh_bulb")
+cast_shadow = 0
