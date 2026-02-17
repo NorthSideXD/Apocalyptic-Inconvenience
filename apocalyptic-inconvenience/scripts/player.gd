@@ -13,16 +13,20 @@ extends CharacterBody3D
 @export var crouch_transition_speed := 8.0
 
 @export var step_height := 0.4
+@export var drop_force := 3.0
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var is_crouching := false
 var head_bob_time := 0.0
+var held_item: PickupItem = null
 
 @onready var head: Node3D = $Head
 @onready var collision: CollisionShape3D = $CollisionShape3D
 @onready var mesh: MeshInstance3D = $MeshInstance3D
+@onready var camera: Camera3D = $Head/Camera3D
 @onready var interact_ray: RayCast3D = $Head/Camera3D/InteractRay
 @onready var interact_prompt: Label = $InteractUI/InteractPrompt
+@onready var hold_point: Node3D = $Head/Camera3D/HoldPoint
 
 var _stand_head_y: float
 var _crouch_head_y: float
@@ -119,24 +123,66 @@ func _get_target_head_y() -> float:
 	return _crouch_head_y if is_crouching else _stand_head_y
 
 func _update_interaction() -> void:
-	var interactable := _get_interactable()
-	if interactable:
-		interact_prompt.text = "[E] " + interactable.get_interaction_text()
+	# Drop held item with Q
+	if held_item and Input.is_action_just_pressed("drop"):
+		drop_item()
+		return
+
+	var target := _get_interact_target()
+
+	if held_item:
+		# While holding, show drop hint
+		interact_prompt.text = "[Q] Drop " + held_item.item_name
+	elif target:
+		interact_prompt.text = "[E] " + target.get_interaction_text()
 		if Input.is_action_just_pressed("interact"):
-			interactable.interact(self)
+			target.interact(self)
 	else:
 		interact_prompt.text = ""
 
-func _get_interactable() -> Interactable:
+func _get_interact_target() -> Node:
 	if not interact_ray.is_colliding():
 		return null
 	var collider := interact_ray.get_collider()
-	if collider is Interactable:
+	if collider and collider.has_method("interact") and collider.has_method("get_interaction_text"):
 		return collider
-	# Check parent — interactable script may be on the parent of a collision shape
-	if collider and collider.get_parent() is Interactable:
+	if collider and collider.get_parent().has_method("interact") and collider.get_parent().has_method("get_interaction_text"):
 		return collider.get_parent()
 	return null
+
+func pick_up(item: PickupItem) -> void:
+	if held_item:
+		return
+	held_item = item
+	# Remove from physics simulation
+	item.freeze = true
+	item.collision_layer = 0
+	item.collision_mask = 0
+	# Reparent to hold point
+	var prev_transform := item.global_transform
+	item.get_parent().remove_child(item)
+	hold_point.add_child(item)
+	item.position = Vector3.ZERO
+	item.rotation = Vector3.ZERO
+
+func drop_item() -> void:
+	if not held_item:
+		return
+	var item := held_item
+	held_item = null
+	# Reparent back to the scene root
+	var drop_pos := item.global_position
+	var forward := -camera.global_transform.basis.z
+	hold_point.remove_child(item)
+	get_tree().current_scene.add_child(item)
+	item.global_position = drop_pos
+	item.rotation = Vector3.ZERO
+	# Re-enable physics
+	item.collision_layer = 1
+	item.collision_mask = 1
+	item.freeze = false
+	# Give it a little toss forward
+	item.linear_velocity = forward * drop_force
 
 func _try_step_up() -> void:
 	var horizontal_motion := Vector3(velocity.x, 0, velocity.z) * get_physics_process_delta_time()

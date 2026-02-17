@@ -1,7 +1,8 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/gaspump.glb" id="pump_model"]
 [ext_resource type="Script" path="res://scripts/cash_register.gd" id="cash_register_script"]
+[ext_resource type="Script" path="res://scripts/pickup_item.gd" id="pickup_item_script"]
 
 [sub_resource type="StandardMaterial3D" id="mat_walls"]
 albedo_color = Color(0.55, 0.5, 0.42, 1)
@@ -38,6 +39,21 @@ size = Vector3(0.6, 0.4, 0.5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_register"]
 size = Vector3(0.6, 0.4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_can"]
+size = Vector3(0.15, 0.25, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_can"]
+size = Vector3(0.15, 0.25, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="mat_can_red"]
+albedo_color = Color(0.7, 0.15, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_can_blue"]
+albedo_color = Color(0.1, 0.25, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_can_green"]
+albedo_color = Color(0.15, 0.6, 0.2, 1)
 
 [sub_resource type="StandardMaterial3D" id="mat_bulb"]
 shading_mode = 0
@@ -254,3 +270,39 @@ shadow_enabled = true
 [node name="LightBulb" type="MeshInstance3D" parent="CeilingLight"]
 mesh = SubResource("SphereMesh_bulb")
 cast_shadow = 0
+
+[node name="CanRed" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.27, -3.5)
+script = ExtResource("pickup_item_script")
+item_name = "Soda Can"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CanRed"]
+shape = SubResource("BoxShape3D_can")
+
+[node name="Mesh" type="MeshInstance3D" parent="CanRed"]
+mesh = SubResource("BoxMesh_can")
+surface_material_override/0 = SubResource("mat_can_red")
+
+[node name="CanBlue" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.27, -3.5)
+script = ExtResource("pickup_item_script")
+item_name = "Water Bottle"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CanBlue"]
+shape = SubResource("BoxShape3D_can")
+
+[node name="Mesh" type="MeshInstance3D" parent="CanBlue"]
+mesh = SubResource("BoxMesh_can")
+surface_material_override/0 = SubResource("mat_can_blue")
+
+[node name="CanGreen" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.15, -1.5)
+script = ExtResource("pickup_item_script")
+item_name = "Energy Drink"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CanGreen"]
+shape = SubResource("BoxShape3D_can")
+
+[node name="Mesh" type="MeshInstance3D" parent="CanGreen"]
+mesh = SubResource("BoxMesh_can")
+surface_material_override/0 = SubResource("mat_can_green")
