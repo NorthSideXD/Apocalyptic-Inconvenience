@@ -21,6 +21,8 @@ var head_bob_time := 0.0
 @onready var head: Node3D = $Head
 @onready var collision: CollisionShape3D = $CollisionShape3D
 @onready var mesh: MeshInstance3D = $MeshInstance3D
+@onready var interact_ray: RayCast3D = $Head/Camera3D/InteractRay
+@onready var interact_prompt: Label = $InteractUI/InteractPrompt
 
 var _stand_head_y: float
 var _crouch_head_y: float
@@ -99,6 +101,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Interaction
+	_update_interaction()
+
 func _update_crouch(delta: float) -> void:
 	var target_height := crouch_height if is_crouching else stand_height
 	var shape := collision.shape as CapsuleShape3D
@@ -112,6 +117,26 @@ func _update_crouch(delta: float) -> void:
 
 func _get_target_head_y() -> float:
 	return _crouch_head_y if is_crouching else _stand_head_y
+
+func _update_interaction() -> void:
+	var interactable := _get_interactable()
+	if interactable:
+		interact_prompt.text = "[E] " + interactable.get_interaction_text()
+		if Input.is_action_just_pressed("interact"):
+			interactable.interact(self)
+	else:
+		interact_prompt.text = ""
+
+func _get_interactable() -> Interactable:
+	if not interact_ray.is_colliding():
+		return null
+	var collider := interact_ray.get_collider()
+	if collider is Interactable:
+		return collider
+	# Check parent — interactable script may be on the parent of a collision shape
+	if collider and collider.get_parent() is Interactable:
+		return collider.get_parent()
+	return null
 
 func _try_step_up() -> void:
 	var horizontal_motion := Vector3(velocity.x, 0, velocity.z) * get_physics_process_delta_time()

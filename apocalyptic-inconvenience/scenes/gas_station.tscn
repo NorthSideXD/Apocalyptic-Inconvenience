@@ -1,6 +1,7 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/gaspump.glb" id="pump_model"]
+[ext_resource type="Script" path="res://scripts/cash_register.gd" id="cash_register_script"]
 
 [sub_resource type="StandardMaterial3D" id="mat_walls"]
 albedo_color = Color(0.55, 0.5, 0.42, 1)
@@ -31,6 +32,12 @@ albedo_color = Color(0.48, 0.46, 0.42, 1)
 
 [sub_resource type="StandardMaterial3D" id="mat_backfloor"]
 albedo_color = Color(0.35, 0.33, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_register"]
+size = Vector3(0.6, 0.4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_register"]
+size = Vector3(0.6, 0.4, 0.5)
 
 [sub_resource type="StandardMaterial3D" id="mat_bulb"]
 shading_mode = 0
@@ -108,11 +115,16 @@ use_collision = true
 size = Vector3(10.0, 0.08, 1.12)
 material = SubResource("mat_counter")
 
-[node name="CashRegister" type="CSGBox3D" parent="."]
+[node name="CashRegister" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.35, -3.3)
-use_collision = true
-size = Vector3(0.6, 0.4, 0.5)
-material = SubResource("mat_machine")
+script = ExtResource("cash_register_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CashRegister"]
+shape = SubResource("BoxShape3D_register")
+
+[node name="Mesh" type="MeshInstance3D" parent="CashRegister"]
+mesh = SubResource("BoxMesh_register")
+surface_material_override/0 = SubResource("mat_machine")
 
 [node name="Oven" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -7.2)
