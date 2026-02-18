@@ -12,7 +12,7 @@ extends CharacterBody3D
 @export var crouch_height := 1.0
 @export var crouch_transition_speed := 8.0
 
-@export var step_height := 0.4
+@export var step_height := 0.25
 @export var drop_force := 3.0
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -217,7 +217,7 @@ func _try_step_up() -> void:
 		# Found ground - move player to the step surface
 		var step_up_pos := raised_forward_transform.origin + down_motion.normalized() * down_test.get_travel().length()
 		# Only step up, never step down with this system
-		if step_up_pos.y > global_position.y + 0.01:
+		if step_up_pos.y > global_position.y + 0.05:
 			global_position = step_up_pos
 			velocity.y = 0.0
 	else:

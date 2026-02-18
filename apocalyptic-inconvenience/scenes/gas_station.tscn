@@ -1,8 +1,9 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/gaspump.glb" id="pump_model"]
 [ext_resource type="Script" path="res://scripts/cash_register.gd" id="cash_register_script"]
 [ext_resource type="Script" path="res://scripts/pickup_item.gd" id="pickup_item_script"]
+[ext_resource type="Script" path="res://scripts/door.gd" id="door_script"]
 
 [sub_resource type="StandardMaterial3D" id="mat_walls"]
 albedo_color = Color(0.55, 0.5, 0.42, 1)
@@ -33,6 +34,12 @@ albedo_color = Color(0.48, 0.46, 0.42, 1)
 
 [sub_resource type="StandardMaterial3D" id="mat_backfloor"]
 albedo_color = Color(0.35, 0.33, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_door"]
+albedo_color = Color(0.4, 0.3, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="mat_crate"]
+albedo_color = Color(0.5, 0.38, 0.22, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_register"]
 size = Vector3(0.6, 0.4, 0.5)
@@ -67,7 +74,15 @@ radius = 0.1
 height = 0.2
 material = SubResource("mat_bulb")
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(1.5, 2.8, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_door"]
+size = Vector3(1.5, 2.8, 0.1)
+
 [node name="GasStation" type="Node3D"]
+
+; === BUILDING SHELL ===
 
 [node name="BuildingShell" type="CSGCombiner3D" parent="."]
 use_collision = true
@@ -97,6 +112,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.4, 5)
 operation = 2
 size = Vector3(3.0, 1.6, 1.0)
 
+; Back door opening to warehouse (centered at X=-4, within warehouse X:-5 to 5)
+[node name="BackDoor" type="CSGBox3D" parent="BuildingShell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.5, -8)
+operation = 2
+size = Vector3(2.0, 3.0, 1.0)
+
 [node name="Roof" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.15, -1.5)
 use_collision = true
@@ -105,34 +126,43 @@ material = SubResource("mat_roof")
 
 [node name="MainFloor" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -1.5)
-size = Vector3(19.5, 0.04, 12.5)
+size = Vector3(19.5, 0.04, 13.0)
 material = SubResource("mat_floor")
 
-[node name="BackFloor" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.03, -5.5)
-size = Vector3(10, 0.06, 5)
-material = SubResource("mat_backfloor")
+; === COUNTER AREA (X: -9.5 to -3, counter front at Z=-2, behind extends to back wall) ===
 
-[node name="CounterFront" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.55, -3.0)
+[node name="CounterFrontLeft" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.75, 0.55, -2.0)
 use_collision = true
-size = Vector3(10.0, 1.1, 0.12)
+size = Vector3(3.5, 1.1, 0.12)
+material = SubResource("mat_counter")
+
+[node name="CounterFrontRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.55, -2.0)
+use_collision = true
+size = Vector3(1.0, 1.1, 0.12)
 material = SubResource("mat_counter")
 
 [node name="CounterSideLeft" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7, 0.55, -4.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0.55, -3.5)
 use_collision = true
-size = Vector3(0.12, 1.1, 1.9)
+size = Vector3(0.12, 1.1, 3.0)
+material = SubResource("mat_counter")
+
+[node name="CounterSideRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0, 0.55, -3.5)
+use_collision = true
+size = Vector3(0.12, 1.1, 3.0)
 material = SubResource("mat_counter")
 
 [node name="CounterTop" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.1, -3.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.25, 1.1, -2.75)
 use_collision = true
-size = Vector3(10.0, 0.08, 1.12)
+size = Vector3(6.5, 0.08, 1.5)
 material = SubResource("mat_counter")
 
 [node name="CashRegister" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.35, -3.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 1.35, -2.75)
 script = ExtResource("cash_register_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CashRegister"]
@@ -142,23 +172,108 @@ shape = SubResource("BoxShape3D_register")
 mesh = SubResource("BoxMesh_register")
 surface_material_override/0 = SubResource("mat_machine")
 
+; Oven behind counter
 [node name="Oven" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -7.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0.5, -4.0)
 use_collision = true
 size = Vector3(1.2, 1.0, 0.8)
 material = SubResource("mat_machine")
 
-[node name="BackMachineShelf" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.0, -7.5)
+; === WAREHOUSE — separate room behind the building ===
+; Building back wall is at Z=-8, warehouse extends from Z=-8 to Z=-14
+
+; Warehouse door — hinge on left at X=-5, swings into warehouse
+[node name="WarehouseDoor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.95, 1.5, -8.0)
+script = ExtResource("door_script")
+interaction_text = "Open"
+open_angle = 90.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarehouseDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, 0)
+shape = SubResource("BoxShape3D_door")
+
+[node name="Mesh" type="MeshInstance3D" parent="WarehouseDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, 0)
+mesh = SubResource("BoxMesh_door")
+surface_material_override/0 = SubResource("mat_door")
+
+; Warehouse walls (left, right, back — front wall is the building's back wall)
+[node name="WarehouseWallLeft" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.0, 2, -11)
 use_collision = true
-size = Vector3(3.0, 2.0, 0.6)
+size = Vector3(0.2, 4, 6)
+material = SubResource("mat_walls")
+
+[node name="WarehouseWallRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.0, 2, -11)
+use_collision = true
+size = Vector3(0.2, 4, 6)
+material = SubResource("mat_walls")
+
+[node name="WarehouseWallBack" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -14)
+use_collision = true
+size = Vector3(10.2, 4, 0.2)
+material = SubResource("mat_walls")
+
+[node name="WarehouseFloor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -11)
+use_collision = true
+size = Vector3(10, 0.04, 6.4)
+material = SubResource("mat_backfloor")
+
+[node name="WarehouseRoof" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.1, -11)
+use_collision = true
+size = Vector3(10.2, 0.2, 6.2)
+material = SubResource("mat_roof")
+
+; Warehouse shelves
+[node name="WarehouseShelfLeft" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 1.2, -13.5)
+use_collision = true
+size = Vector3(1.0, 2.4, 0.8)
 material = SubResource("mat_shelf")
 
-[node name="BackMachineShelf2" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 1.0, -7.5)
+[node name="WarehouseShelfRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1.2, -13.5)
 use_collision = true
-size = Vector3(2.0, 2.0, 0.6)
+size = Vector3(1.0, 2.4, 0.8)
 material = SubResource("mat_shelf")
+
+[node name="WarehouseShelfBack" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -13.7)
+use_collision = true
+size = Vector3(7.0, 2.4, 0.6)
+material = SubResource("mat_shelf")
+
+; Warehouse crates
+[node name="CrateA" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.4, -11)
+use_collision = true
+size = Vector3(1.0, 0.8, 1.0)
+material = SubResource("mat_crate")
+
+[node name="CrateB" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.4, -12)
+use_collision = true
+size = Vector3(0.8, 0.8, 0.8)
+material = SubResource("mat_crate")
+
+[node name="CrateC" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.4, -10)
+use_collision = true
+size = Vector3(1.2, 0.8, 0.8)
+material = SubResource("mat_crate")
+
+[node name="CrateSmallOnTop" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.1, -11)
+use_collision = true
+size = Vector3(0.6, 0.6, 0.6)
+material = SubResource("mat_crate")
+
+; === SHOP FLOOR SHELVES ===
 
 [node name="ShelfRowA" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.0, -1.5)
@@ -190,6 +305,8 @@ use_collision = true
 size = Vector3(4.0, 2.0, 0.7)
 material = SubResource("mat_shelf")
 
+; === WALL SHELVES ===
+
 [node name="WallShelfRight" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 1.5, -1.0)
 use_collision = true
@@ -202,23 +319,21 @@ use_collision = true
 size = Vector3(0.5, 2.5, 6.0)
 material = SubResource("mat_wallshelf")
 
-[node name="WallShelfBack" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -7.5)
-use_collision = true
-size = Vector3(5.0, 2.5, 0.5)
-material = SubResource("mat_wallshelf")
-
 [node name="WallShelfFrontRight" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.5, 4.6)
 use_collision = true
 size = Vector3(4.0, 2.5, 0.5)
 material = SubResource("mat_wallshelf")
 
+; === APPLIANCES ===
+
 [node name="DrinksFridge" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 1.0, 3.5)
 use_collision = true
 size = Vector3(0.7, 2.0, 2.5)
 material = SubResource("mat_machine")
+
+; === CANOPY & GAS PUMPS ===
 
 [node name="Canopy" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
@@ -259,6 +374,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0)
 [node name="GasPump2" parent="Canopy" instance=ExtResource("pump_model")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
 
+; === LIGHTING ===
+
 [node name="CeilingLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
 light_color = Color(1, 0.92, 0.7, 1)
@@ -271,8 +388,22 @@ shadow_enabled = true
 mesh = SubResource("SphereMesh_bulb")
 cast_shadow = 0
 
+[node name="WarehouseLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -11)
+light_color = Color(0.9, 0.85, 0.7, 1)
+light_energy = 1.2
+omni_range = 10.0
+omni_attenuation = 0.8
+shadow_enabled = true
+
+[node name="WarehouseBulb" type="MeshInstance3D" parent="WarehouseLight"]
+mesh = SubResource("SphereMesh_bulb")
+cast_shadow = 0
+
+; === PICKUP ITEMS ===
+
 [node name="CanRed" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.27, -3.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 1.27, -2.75)
 script = ExtResource("pickup_item_script")
 item_name = "Soda Can"
 
@@ -284,7 +415,7 @@ mesh = SubResource("BoxMesh_can")
 surface_material_override/0 = SubResource("mat_can_red")
 
 [node name="CanBlue" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.27, -3.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.27, -2.75)
 script = ExtResource("pickup_item_script")
 item_name = "Water Bottle"
 
