@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://8l7n58yus1w3"]
+[gd_scene format=3 uid="uid://8l7n58yus1w3"]
 
 [ext_resource type="Script" uid="uid://h4pslvpwkjql" path="res://scripts/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2"]
@@ -7,10 +7,10 @@
 [ext_resource type="Shader" uid="uid://c2s8xm7r1xx0s" path="res://shaders/retro_post_process.gdshader" id="5"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
-sky_top_color = Color(0.2, 0.35, 0.55, 1)
-sky_horizon_color = Color(0.6, 0.55, 0.45, 1)
+sky_top_color = Color(0.22, 0.42, 0.72, 1)
+sky_horizon_color = Color(0.78, 0.65, 0.42, 1)
 ground_bottom_color = Color(0.15, 0.12, 0.1, 1)
-ground_horizon_color = Color(0.6, 0.55, 0.45, 1)
+ground_horizon_color = Color(0.78, 0.65, 0.42, 1)
 
 [sub_resource type="Sky" id="Sky_1"]
 sky_material = SubResource("ProceduralSkyMaterial_1")
@@ -20,14 +20,14 @@ background_mode = 2
 sky = SubResource("Sky_1")
 tonemap_mode = 2
 fog_enabled = true
-fog_light_color = Color(0.5, 0.45, 0.35, 1)
+fog_light_color = Color(0.65, 0.55, 0.3, 1)
 fog_density = 0.008
 volumetric_fog_enabled = true
 volumetric_fog_density = 0.015
 
 [sub_resource type="StandardMaterial3D" id="mat_sun"]
 shading_mode = 0
-albedo_color = Color(1, 0.9, 0.5, 1)
+albedo_color = Color(1, 0.82, 0.38, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_sun"]
 material = SubResource("mat_sun")
@@ -59,64 +59,64 @@ shader_parameter/midtone_tint = Color(0.15, 0.3, 0.18, 1)
 shader_parameter/highlight_tint = Color(0.28, 0.38, 0.22, 1)
 shader_parameter/tint_strength = 0.35
 
-[node name="Game" type="Node3D"]
+[node name="Game" type="Node3D" unique_id=1392007261]
 script = ExtResource("1")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=347607216]
 environment = SubResource("Environment_1")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1315283609]
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 20, 0)
-light_color = Color(1, 0.95, 0.8, 1)
+light_color = Color(1, 0.85, 0.6, 1)
 shadow_enabled = true
 
-[node name="DayNightCycle" type="Node3D" parent="."]
+[node name="DayNightCycle" type="Node3D" parent="." unique_id=416532506]
 script = ExtResource("4")
 time_of_day = 0.35
 
-[node name="SunMesh" type="MeshInstance3D" parent="."]
+[node name="SunMesh" type="MeshInstance3D" parent="." unique_id=1594612396]
 cast_shadow = 0
 mesh = SubResource("SphereMesh_sun")
 
-[node name="DesertGround" type="CSGBox3D" parent="."]
+[node name="DesertGround" type="CSGBox3D" parent="." unique_id=1074544318]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 use_collision = true
 size = Vector3(200, 0.5, 200)
 material = SubResource("mat_desert")
 
-[node name="Highway" type="CSGBox3D" parent="."]
+[node name="Highway" type="CSGBox3D" parent="." unique_id=1686239285]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.02, 0)
 use_collision = true
 size = Vector3(12, 0.1, 200)
 material = SubResource("mat_road")
 
-[node name="HighwayCenterLine" type="CSGBox3D" parent="."]
+[node name="HighwayCenterLine" type="CSGBox3D" parent="." unique_id=1146131316]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.08, 0)
 size = Vector3(0.2, 0.02, 200)
 material = SubResource("mat_road_line")
 
-[node name="ParkingLot" type="CSGBox3D" parent="."]
+[node name="ParkingLot" type="CSGBox3D" parent="." unique_id=8523887]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.01, 10)
 use_collision = true
 size = Vector3(24, 0.08, 18)
 material = SubResource("mat_parking")
 
-[node name="AccessRoad" type="CSGBox3D" parent="."]
+[node name="AccessRoad" type="CSGBox3D" parent="." unique_id=1995493580]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0.01, 10)
 use_collision = true
 size = Vector3(8, 0.08, 8)
 material = SubResource("mat_road")
 
-[node name="GasStation" parent="." instance=ExtResource("3")]
+[node name="GasStation" parent="." unique_id=914263605 instance=ExtResource("3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0039000511, 0.014123917, 0.0002565384)
 
-[node name="Player" parent="." instance=ExtResource("2")]
+[node name="Player" parent="." unique_id=560006211 instance=ExtResource("2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 8)
 
-[node name="PostProcess" type="CanvasLayer" parent="."]
+[node name="PostProcess" type="CanvasLayer" parent="." unique_id=14091529]
 layer = 10
 
-[node name="RetroFilter" type="ColorRect" parent="PostProcess"]
+[node name="RetroFilter" type="ColorRect" parent="PostProcess" unique_id=376210363]
 material = SubResource("ShaderMaterial_retro")
 anchors_preset = 15
 anchor_right = 1.0
